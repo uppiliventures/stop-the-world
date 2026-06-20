@@ -4,10 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { IMAGERY, AUDIO_LOOP } from "@/lib/imagery";
 import { TIERS, type Tier } from "@/lib/tiers";
 
-const CROSSFADE_HOLD_MS = 11000; // each image holds 11s
-const FADE_MS = 4000;            // slow crossfade between images
+const CROSSFADE_HOLD_MS = 18000;
+const FADE_MS = 6000;
 const TARGET_VOLUME = 0.7;
-const END_FADE_S = 8;            // audio + visuals settle over the final 8s
+const END_FADE_S = 8;
 
 function format(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -21,6 +21,8 @@ export default function AudioEngine({ tier = "AWARE" }: { tier?: Tier }) {
   const [frame, setFrame] = useState(0);
   const [done, setDone] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const ctxRef = useRef<AudioContext | null>(null);
+  const gainRef = useRef<GainNode | null>(null);
 
   // Countdown timer.
   useEffect(() => {
@@ -37,46 +39,64 @@ export default function AudioEngine({ tier = "AWARE" }: { tier?: Tier }) {
     return () => clearInterval(tick);
   }, []);
 
-  // Image cycle — but stop advancing in the final stretch so it settles
-  // on the last image and fades, instead of jumping to a new one at the end.
+  // Image cycle — settle on final image near the end instead of jumping.
   useEffect(() => {
     const cycle = setInterval(() => {
       setRemaining((r) => {
-        if (r > END_FADE_S + 2) {
-          setFrame((f) => (f + 1) % IMAGERY.length);
-        }
-        return r; // don't change remaining here
+        if (r > END_FADE_S + 2) setFrame((f) => (f + 1) % IMAGERY.length);
+        return r;
       });
     }, CROSSFADE_HOLD_MS);
     return () => clearInterval(cycle);
   }, []);
 
-  // Audio: play once, fade in.
+  // Audio via Web Audio API for smooth, crackle-free volume ramps.
   useEffect(() => {
     const el = audioRef.current;
     if (!el) return;
-    el.loop = false;
-    el.volume = 0;
-    el.play().catch(() => {});
-    const fadeIn = setInterval(() => {
-      if (el.volume < TARGET_VOLUME - 0.03) {
-        el.volume = Math.min(TARGET_VOLUME, el.volume + 0.03);
-      } else {
-        el.volume = TARGET_VOLUME;
-        clearInterval(fadeIn);
+
+    let ctx: AudioContext;
+    let gain: GainNode;
+    try {
+      ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const source = ctx.createMediaElementSource(el);
+      gain = ctx.createGain();
+      source.connect(gain);
+      gain.connect(ctx.destination);
+      ctxRef.current = ctx;
+      gainRef.current = gain;
+
+      // Start silent, ramp up smoothly over 3s (no stepping = no crackle).
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(TARGET_VOLUME, ctx.currentTime + 3);
+
+      el.play().catch(() => {});
+      if (ctx.state === "suspended") ctx.resume();
+    } catch {
+      // Fallback: plain element volume if Web Audio unavailable.
+      el.volume = TARGET_VOLUME;
+      el.play().catch(() => {});
+    }
+
+    return () => {
+      el.pause();
+      if (ctxRef.current) {
+        ctxRef.current.close().catch(() => {});
+        ctxRef.current = null;
       }
-    }, 130);
-    return () => clearInterval(fadeIn);
+    };
   }, []);
 
-  // Gentle audio fade over the final END_FADE_S seconds.
+  // Smooth audio fade-out over the final seconds.
   useEffect(() => {
-    const el = audioRef.current;
-    if (!el) return;
-    if (remaining <= END_FADE_S && remaining > 0) {
-      el.volume = Math.max(0, TARGET_VOLUME * (remaining / END_FADE_S));
+    const gain = gainRef.current;
+    const ctx = ctxRef.current;
+    if (!gain || !ctx) return;
+    if (remaining === END_FADE_S) {
+      gain.gain.cancelScheduledValues(ctx.currentTime);
+      gain.gain.setValueAtTime(Math.max(0.0001, gain.gain.value), ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + END_FADE_S);
     }
-    if (remaining === 0) el.volume = 0;
   }, [remaining]);
 
   return (
@@ -109,7 +129,7 @@ export default function AudioEngine({ tier = "AWARE" }: { tier?: Tier }) {
         )}
       </div>
 
-      <audio ref={audioRef} src={AUDIO_LOOP} preload="auto" />
+      <audio ref={audioRef} src={AUDIO_LOOP} preload="auto" crossOrigin="anonymous" />
     </div>
   );
 }

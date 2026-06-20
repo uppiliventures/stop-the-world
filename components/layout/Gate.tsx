@@ -12,18 +12,17 @@ const FADE_IN = 3000;
 const HOLD_MS = 6000;
 const FADE_OUT = 5000;
 const SENTENCE_TOTAL = FADE_IN + HOLD_MS + FADE_OUT;
-const PRE_PAUSE = 4000; // still beat after the press before the first words
+const PRE_PAUSE = 4000;
 
 type Stage = "form" | "warning" | "begin" | "breathing" | "closing";
-type Phase = "in" | "hold" | "out" | "again";
+type Phase = "in" | "hold" | "out";
 
 const WARNINGS = ["sit comfortably", "never force the breath", "if you feel unwell, simply stop"];
 
 const PHASE_TEXT: Record<Phase, string> = {
-  in: "breathe in through your nose",
-  hold: "and hold",
-  out: "breathe out through your mouth",
-  again: "breathe in through your nose",
+  in: "breathe in through your nose for 4 seconds",
+  hold: "hold your breath for 7 seconds",
+  out: "now release your breath through your mouth for 8 seconds",
 };
 
 export default function Gate({ onEnter, onBegin }: { onEnter: () => void; onBegin?: () => void }) {
@@ -37,6 +36,7 @@ export default function Gate({ onEnter, onBegin }: { onEnter: () => void; onBegi
   const [phase, setPhase] = useState<Phase>("in");
   const [orbBig, setOrbBig] = useState(false);
   const [phaseOpacity, setPhaseOpacity] = useState(0);
+  const [count, setCount] = useState(INHALE);
   const breathStart = useRef<number>(0);
   const lastPhase = useRef<Phase | null>(null);
 
@@ -72,7 +72,6 @@ export default function Gate({ onEnter, onBegin }: { onEnter: () => void; onBegi
       setStage("begin");
       return;
     }
-    // A still pause before the very first sentence, so the user settles first.
     const lead = warnIdx === 0 ? PRE_PAUSE : 50;
     setWarnOpacity(0);
     const tIn = setTimeout(() => setWarnOpacity(1), lead);
@@ -113,18 +112,22 @@ export default function Gate({ onEnter, onBegin }: { onEnter: () => void; onBegi
         return;
       }
       const t = elapsed % CYCLE;
-      const breathNo = Math.floor(elapsed / CYCLE);
       let next: Phase;
+      let remainingInPhase: number;
       if (t < INHALE) {
         next = "in";
+        remainingInPhase = INHALE - t;
         setOrbBig(true);
       } else if (t < INHALE + HOLD) {
         next = "hold";
+        remainingInPhase = INHALE + HOLD - t;
         setOrbBig(true);
       } else {
         next = "out";
+        remainingInPhase = CYCLE - t;
         setOrbBig(false);
       }
+      setCount(Math.ceil(remainingInPhase));
       if (next !== lastPhase.current) {
         lastPhase.current = next;
         setPhase(next);
@@ -146,7 +149,7 @@ export default function Gate({ onEnter, onBegin }: { onEnter: () => void; onBegi
     stage === "breathing"
       ? phase === "out"
         ? `transform ${EXHALE}s ease-in-out`
-        : phase === "in" || phase === "again"
+        : phase === "in"
         ? `transform ${INHALE}s ease-in-out`
         : "transform 1.5s ease-out"
       : "transform 0.6s ease-in-out";
@@ -165,7 +168,7 @@ export default function Gate({ onEnter, onBegin }: { onEnter: () => void; onBegi
   } else if (stage === "breathing") {
     guideText = PHASE_TEXT[phase];
     guideOpacity = phaseOpacity;
-    guideFade = phase === "hold" ? 2800 : 1500;
+    guideFade = 900;
   }
 
   return (
@@ -190,7 +193,7 @@ export default function Gate({ onEnter, onBegin }: { onEnter: () => void; onBegi
         onClick={submit}
         disabled={stage !== "form" || status === "sending"}
         aria-label="stop the world"
-        className={`${stage === "form" || stage === "warning" ? "idle-orb" : ""} flex h-44 w-44 items-center justify-center rounded-full text-sm font-light tracking-wide text-ink active:scale-95 disabled:cursor-default sm:h-52 sm:w-52`}
+        className={`${stage === "form" ? "idle-orb" : ""} flex h-44 w-44 items-center justify-center rounded-full font-light tracking-wide text-ink active:scale-95 disabled:cursor-default sm:h-52 sm:w-52 ${stage === "breathing" ? "text-5xl" : "text-sm"}`}
         style={{
           backgroundColor: "#DEDAF0",
           boxShadow: "0 0 70px 12px rgba(222, 218, 240, 0.30), 0 0 110px 24px rgba(222, 218, 240, 0.12)",
@@ -202,16 +205,16 @@ export default function Gate({ onEnter, onBegin }: { onEnter: () => void; onBegi
         {stage === "form" && status !== "sending" ? "stop the world" : ""}
       </button>
 
-      <div className="absolute top-[64%] left-0 right-0 flex h-8 items-center justify-center px-6">
+      <div className="absolute top-[64%] left-0 right-0 flex h-12 items-center justify-center px-6">
         <p
-          className="text-center text-base font-light tracking-[0.2em] text-bone/70"
+          className="text-center text-base font-light tracking-[0.15em] text-bone/70"
           style={{ opacity: stage === "closing" ? 0 : guideOpacity, transition: `opacity ${guideFade}ms ease-in-out` }}
         >
           {guideText}
         </p>
       </div>
 
-      <div className="absolute top-[72%] left-0 right-0 flex flex-col items-center gap-3 px-6">
+      <div className="absolute top-[74%] left-0 right-0 flex flex-col items-center gap-3 px-6">
         <input
           type="email"
           inputMode="email"
@@ -227,13 +230,6 @@ export default function Gate({ onEnter, onBegin }: { onEnter: () => void; onBegi
           <p className="max-w-xs text-center text-sm font-light text-bone/60">{message}</p>
         )}
       </div>
-
-      <p
-        className="absolute bottom-10 left-0 right-0 px-6 text-center text-xs font-light tracking-wide text-bone/30 transition-opacity duration-1000"
-        style={{ opacity: stage !== "form" && stage !== "closing" ? 1 : 0 }}
-      >
-        sit comfortably. never force the breath. if you feel unwell, stop.
-      </p>
     </main>
   );
 }
