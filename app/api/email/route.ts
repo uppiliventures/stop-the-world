@@ -98,7 +98,7 @@ export async function POST(req: Request) {
       "there are deeper ones to explore",
       "",
       "so welcome my friend",
-      "lovingly yours",
+      "peace and love",
       "",
       "stop the world family",
       "from forge of the soul",
