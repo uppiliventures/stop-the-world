@@ -17,13 +17,13 @@ export const TIERS: Record<
   PEACE: {
     label: "Peace",
     minutes: 20, // structurally also supports 30
-    price: "£29.99 lifetime",
+    price: "£29.99 / year",
     stripeLink: "https://buy.stripe.com/4gMbJ03Y7gJEgzwbnhbZe05", // Stripe Payment Link
   },
   HARMONY: {
     label: "Harmony",
     minutes: 60,
-    price: "£49.99 lifetime",
+    price: "£49.99 / year",
     stripeLink: "https://buy.stripe.com/6oUbJ00LVdxs1EC1MHbZe04", // Stripe Payment Link
   },
 };

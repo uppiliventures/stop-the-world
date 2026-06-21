@@ -10,12 +10,7 @@ export default function MovementFooter({ hidden }: { hidden: boolean }) {
       }`}
     >
       <nav className="mx-auto grid max-w-4xl grid-cols-2 gap-x-8 gap-y-3 text-[11px] uppercase tracking-[0.2em] text-bone sm:grid-cols-4">
-        <Item
-          index="01"
-          label="Extend Protocols"
-          sub={`${TIERS.PEACE.price} · ${TIERS.HARMONY.price}`}
-          href={TIERS.PEACE.stripeLink}
-        />
+        <ProtocolItem />
         <Item index="02" label="Books" sub="Forge series & Book 2" href={FORGE_LINKS.books} />
         <Item index="03" label="Merch" sub="Heavy streetwear & desk" href={FORGE_LINKS.merch} />
         <Item index="04" label="Events" sub="Cohorts & sanctuary" href={FORGE_LINKS.events} />
@@ -24,17 +19,24 @@ export default function MovementFooter({ hidden }: { hidden: boolean }) {
   );
 }
 
-function Item({
-  index,
-  label,
-  sub,
-  href,
-}: {
-  index: string;
-  label: string;
-  sub: string;
-  href: string;
-}) {
+function ProtocolItem() {
+  return (
+    <div className="flex flex-col gap-1">
+      <span className="text-bone/50">01</span>
+      <span className="text-bone">Extend Protocols</span>
+      <div className="flex flex-col gap-1 text-[10px] normal-case tracking-normal text-bone/40">
+        <a href={TIERS.PEACE.stripeLink} target="_blank" rel="noreferrer" className="hover:text-violet-glow">
+          {TIERS.PEACE.label} · {TIERS.PEACE.price}
+        </a>
+        <a href={TIERS.HARMONY.stripeLink} target="_blank" rel="noreferrer" className="hover:text-violet-glow">
+          {TIERS.HARMONY.label} · {TIERS.HARMONY.price}
+        </a>
+      </div>
+    </div>
+  );
+}
+
+function Item({ index, label, sub, href }: { index: string; label: string; sub: string; href: string; }) {
   const content = (
     <div className="flex flex-col gap-1">
       <span className="text-bone/50">{index}</span>
@@ -42,10 +44,7 @@ function Item({
       <span className="text-[10px] normal-case tracking-normal text-bone/40">{sub}</span>
     </div>
   );
-
-  if (!href) {
-    return <div className="cursor-default">{content}</div>;
-  }
+  if (!href) return <div className="cursor-default">{content}</div>;
   return (
     <a href={href} target="_blank" rel="noreferrer" className="hover:text-violet-glow">
       {content}
