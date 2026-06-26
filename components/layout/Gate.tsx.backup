@@ -5,9 +5,8 @@ import { useEffect, useRef, useState } from "react";
 const INHALE = 4;
 const HOLD = 7;
 const EXHALE = 8;
-const REST = 5; // calm rest between full cycles
-const CYCLE = INHALE + HOLD + EXHALE + REST; // one full cycle incl. the rest
-const BREATHS = 3; // three cycles
+const CYCLE = INHALE + HOLD + EXHALE;
+const BREATHS = 2;
 
 const FADE_IN = 3000;
 const HOLD_MS = 6000;
@@ -15,25 +14,15 @@ const FADE_OUT = 5000;
 const SENTENCE_TOTAL = FADE_IN + HOLD_MS + FADE_OUT;
 const PRE_PAUSE = 4000;
 
-type Stage = "form" | "warning" | "prep" | "begin" | "breathing" | "closing";
-type Phase = "in" | "hold" | "out" | "rest";
+type Stage = "form" | "warning" | "begin" | "breathing" | "closing";
+type Phase = "in" | "hold" | "out";
 
 const WARNINGS = ["sit comfortably", "never force the breath", "if you feel unwell, simply stop"];
 
-// Calm preparation lead-in, shown one line at a time before breathing starts.
-const PREP = [
-  "find a comfortable position",
-  "relax your shoulders",
-  "let us breathe together as one",
-  "follow my instructions and the timer will count you through the cycles",
-  "are you ready to begin?",
-];
-
 const PHASE_TEXT: Record<Phase, string> = {
-  in: "breathe in through your nose",
-  hold: "hold your breath",
-  out: "release your breath through your mouth",
-  rest: "rest",
+  in: "breathe in through your nose for 4 seconds",
+  hold: "hold your breath for 7 seconds",
+  out: "now release your breath through your mouth for 8 seconds",
 };
 
 export default function Gate({ onEnter, onBegin }: { onEnter: () => void; onBegin?: () => void }) {
@@ -43,8 +32,6 @@ export default function Gate({ onEnter, onBegin }: { onEnter: () => void; onBegi
   const [stage, setStage] = useState<Stage>("form");
   const [warnIdx, setWarnIdx] = useState(0);
   const [warnOpacity, setWarnOpacity] = useState(0);
-  const [prepIdx, setPrepIdx] = useState(0);
-  const [prepOpacity, setPrepOpacity] = useState(0);
   const [beginOpacity, setBeginOpacity] = useState(0);
   const [phase, setPhase] = useState<Phase>("in");
   const [orbBig, setOrbBig] = useState(false);
@@ -79,12 +66,10 @@ export default function Gate({ onEnter, onBegin }: { onEnter: () => void; onBegi
     }
   }
 
-  // Warnings sequence.
   useEffect(() => {
     if (stage !== "warning") return;
     if (warnIdx >= WARNINGS.length) {
-      setStage("prep");
-      setPrepIdx(0);
+      setStage("begin");
       return;
     }
     const lead = warnIdx === 0 ? PRE_PAUSE : 50;
@@ -99,25 +84,6 @@ export default function Gate({ onEnter, onBegin }: { onEnter: () => void; onBegi
     };
   }, [stage, warnIdx]);
 
-  // Calm preparation lead-in, same gentle pacing as the warnings.
-  useEffect(() => {
-    if (stage !== "prep") return;
-    if (prepIdx >= PREP.length) {
-      setStage("begin");
-      return;
-    }
-    setPrepOpacity(0);
-    const tIn = setTimeout(() => setPrepOpacity(1), 50);
-    const tOut = setTimeout(() => setPrepOpacity(0), FADE_IN + HOLD_MS);
-    const tNext = setTimeout(() => setPrepIdx((i) => i + 1), SENTENCE_TOTAL);
-    return () => {
-      clearTimeout(tIn);
-      clearTimeout(tOut);
-      clearTimeout(tNext);
-    };
-  }, [stage, prepIdx]);
-
-  // "let's begin" beat, then a calm hold before the first inhale.
   useEffect(() => {
     if (stage !== "begin") return;
     setBeginOpacity(0);
@@ -135,7 +101,6 @@ export default function Gate({ onEnter, onBegin }: { onEnter: () => void; onBegi
     };
   }, [stage]);
 
-  // Breathing engine. Real-time clock; clean one-second countdown per phase.
   useEffect(() => {
     if (stage !== "breathing") return;
     const id = setInterval(() => {
@@ -157,12 +122,8 @@ export default function Gate({ onEnter, onBegin }: { onEnter: () => void; onBegi
         next = "hold";
         remainingInPhase = INHALE + HOLD - t;
         setOrbBig(true);
-      } else if (t < INHALE + HOLD + EXHALE) {
-        next = "out";
-        remainingInPhase = INHALE + HOLD + EXHALE - t;
-        setOrbBig(false);
       } else {
-        next = "rest";
+        next = "out";
         remainingInPhase = CYCLE - t;
         setOrbBig(false);
       }
@@ -200,10 +161,6 @@ export default function Gate({ onEnter, onBegin }: { onEnter: () => void; onBegi
     guideText = WARNINGS[warnIdx];
     guideOpacity = warnOpacity;
     guideFade = warnOpacity === 1 ? FADE_IN : FADE_OUT;
-  } else if (stage === "prep" && prepIdx < PREP.length) {
-    guideText = PREP[prepIdx];
-    guideOpacity = prepOpacity;
-    guideFade = prepOpacity === 1 ? FADE_IN : FADE_OUT;
   } else if (stage === "begin") {
     guideText = "let's begin";
     guideOpacity = beginOpacity;
@@ -213,14 +170,6 @@ export default function Gate({ onEnter, onBegin }: { onEnter: () => void; onBegi
     guideOpacity = phaseOpacity;
     guideFade = 900;
   }
-
-  // The orb shows the per-phase countdown during breathing, but stays quiet during the rest.
-  const orbLabel =
-    stage === "form" && status !== "sending"
-      ? "stop the world"
-      : stage === "breathing" && phase !== "rest"
-      ? String(count)
-      : "";
 
   return (
     <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6">
@@ -253,7 +202,7 @@ export default function Gate({ onEnter, onBegin }: { onEnter: () => void; onBegi
           opacity: stage === "closing" ? 0 : 1,
         }}
       >
-        {orbLabel}
+        {stage === "form" && status !== "sending" ? "stop the world" : ""}
       </button>
 
       <div className="absolute top-[64%] left-0 right-0 flex h-12 items-center justify-center px-6">
