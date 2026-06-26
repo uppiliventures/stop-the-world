@@ -25,14 +25,15 @@ const PREP = [
   "find a comfortable position",
   "relax your shoulders",
   "let us breathe together as one",
-  "follow my instructions and the timer will count you through the cycles",
+  "we will breathe in for 4 seconds, hold for 7, and breathe out for 8",
+  "the timer will count you through each step",
   "are you ready to begin?",
 ];
 
 const PHASE_TEXT: Record<Phase, string> = {
-  in: "breathe in through your nose",
-  hold: "hold your breath",
-  out: "release your breath through your mouth",
+  in: "breathe in",
+  hold: "hold",
+  out: "breathe out",
   rest: "rest",
 };
 
