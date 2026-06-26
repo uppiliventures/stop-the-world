@@ -31,6 +31,8 @@ export const TIERS: Record<
 // Movement footer destinations. Swap placeholders for live URLs.
 export const FORGE_LINKS = {
   books: "https://book.forgeofthesoul.com",
+  movement: "https://forgeofthesoul.com",
+  journal: "https://sandhya.io",
   merch: "https://merch.forgeofthesoul.com",
   events: "https://events.forgeofthesoul.com",
 };

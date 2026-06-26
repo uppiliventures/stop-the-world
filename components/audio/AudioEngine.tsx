@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { IMAGERY, AUDIO_LOOP } from "@/lib/imagery";
-import { TIERS, type Tier } from "@/lib/tiers";
+import { TIERS, FORGE_LINKS, type Tier } from "@/lib/tiers";
 
 const CROSSFADE_HOLD_MS = 18000;
 const FADE_MS = 6000;
@@ -15,11 +15,21 @@ function format(seconds: number): string {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
+// Gentle ecosystem doors, shown only at the very end (the peak moment).
+const DOORS: { label: string; href: string }[] = [
+  { label: "book", href: FORGE_LINKS.books },
+  { label: "movement", href: FORGE_LINKS.movement },
+  { label: "journal", href: FORGE_LINKS.journal },
+  { label: "peace", href: TIERS.PEACE.stripeLink },
+  { label: "harmony", href: TIERS.HARMONY.stripeLink },
+];
+
 export default function AudioEngine({ tier = "AWARE" }: { tier?: Tier }) {
   const totalSeconds = TIERS[tier].minutes * 60;
   const [remaining, setRemaining] = useState(totalSeconds);
   const [frame, setFrame] = useState(0);
   const [done, setDone] = useState(false);
+  const [doorsIn, setDoorsIn] = useState(false); // doors fade in a beat after "the world returns"
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const ctxRef = useRef<AudioContext | null>(null);
   const gainRef = useRef<GainNode | null>(null);
@@ -38,6 +48,13 @@ export default function AudioEngine({ tier = "AWARE" }: { tier?: Tier }) {
     }, 1000);
     return () => clearInterval(tick);
   }, []);
+
+  // When the session ends, let "the world returns" settle, then gently reveal the doors.
+  useEffect(() => {
+    if (!done) return;
+    const t = setTimeout(() => setDoorsIn(true), 4500);
+    return () => clearTimeout(t);
+  }, [done]);
 
   // Image cycle — settle on final image near the end instead of jumping.
   useEffect(() => {
@@ -66,14 +83,12 @@ export default function AudioEngine({ tier = "AWARE" }: { tier?: Tier }) {
       ctxRef.current = ctx;
       gainRef.current = gain;
 
-      // Start silent, ramp up smoothly over 3s (no stepping = no crackle).
       gain.gain.setValueAtTime(0.0001, ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(TARGET_VOLUME, ctx.currentTime + 3);
 
       el.play().catch(() => {});
       if (ctx.state === "suspended") ctx.resume();
     } catch {
-      // Fallback: plain element volume if Web Audio unavailable.
       el.volume = TARGET_VOLUME;
       el.play().catch(() => {});
     }
@@ -119,9 +134,36 @@ export default function AudioEngine({ tier = "AWARE" }: { tier?: Tier }) {
 
       <div className="absolute inset-0 bg-ink/50" />
 
-      <div className="absolute inset-0 flex items-center justify-center">
+      <div className="absolute inset-0 flex flex-col items-center justify-center px-6">
         {done ? (
-          <p className="text-lg tracking-[0.3em] text-bone/80">the world returns</p>
+          <>
+            <p className="text-lg tracking-[0.3em] text-bone/80">the world returns</p>
+
+            {/* The gentle doors: appear a calm beat after the world returns. */}
+            <div
+              className="mt-14 flex flex-col items-center gap-5 transition-opacity duration-[2500ms] ease-in-out"
+              style={{ opacity: doorsIn ? 1 : 0, pointerEvents: doorsIn ? "auto" : "none" }}
+            >
+              <p className="text-[11px] lowercase tracking-[0.25em] text-bone/40">
+                if you wish to go deeper
+              </p>
+              <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
+                {DOORS.map((d) =>
+                  d.href ? (
+                    <a
+                      key={d.label}
+                      href={d.href}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-sm lowercase tracking-[0.2em] text-bone/55 transition-colors duration-500 hover:text-bone"
+                    >
+                      {d.label}
+                    </a>
+                  ) : null
+                )}
+              </nav>
+            </div>
+          </>
         ) : (
           <p className="font-mono text-5xl tabular-nums tracking-widest text-bone/70 sm:text-7xl">
             {format(remaining)}
