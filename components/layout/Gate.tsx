@@ -330,7 +330,7 @@ export default function Gate({ onEnter, onBegin }: { onEnter: () => void; onBegi
 
         {/* Guide text anchored just beneath the orb (never overlaps). */}
         {!isForm && (
-          <div className="pointer-events-none absolute left-1/2 top-full mt-8 w-screen max-w-md -translate-x-1/2 px-6">
+          <div className="pointer-events-none absolute left-1/2 top-full mt-8 w-screen max-w-sm -translate-x-1/2 px-8">
             <p
               className="text-center text-base font-light leading-relaxed tracking-[0.05em] text-bone/70 sm:tracking-[0.12em]"
               style={{ opacity: guideOpacity, transition: `opacity ${guideFade}ms ease-in-out` }}
