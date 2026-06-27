@@ -302,28 +302,44 @@ export default function Gate({ onEnter, onBegin }: { onEnter: () => void; onBegi
         are you ready to stop the world?
       </h1>
 
-      <button
-        onClick={submit}
-        disabled={stage !== "form" || status === "sending"}
-        aria-label="stop the world"
-        className={`${isForm ? "idle-orb" : ""} flex h-44 w-44 shrink-0 items-center justify-center rounded-full font-light tracking-wide text-ink active:scale-95 disabled:cursor-default sm:h-52 sm:w-52 ${stage === "breathing" ? "text-5xl" : "text-sm"}`}
-        style={{
-          backgroundColor: "#DEDAF0",
-          boxShadow: "0 0 70px 12px rgba(222, 218, 240, 0.30), 0 0 110px 24px rgba(222, 218, 240, 0.12)",
-          transform: `scale(${orbScale})`,
-          transition: `${orbTransition}, ${orbOpacityTransition}`,
-          opacity: orbOpacity,
-        }}
-      >
-        <span
+      {/* Orb + guide text bound together: the text is anchored just below the
+          orb, so it travels with the orb and can never overlap it. */}
+      <div className="relative flex shrink-0 items-center justify-center">
+        <button
+          onClick={submit}
+          disabled={stage !== "form" || status === "sending"}
+          aria-label="stop the world"
+          className={`${isForm ? "idle-orb" : ""} flex h-44 w-44 shrink-0 items-center justify-center rounded-full font-light tracking-wide text-ink active:scale-95 disabled:cursor-default sm:h-52 sm:w-52 ${stage === "breathing" ? "text-5xl" : "text-sm"}`}
           style={{
-            opacity: stage === "breathing" ? phaseOpacity : 1,
-            transition: `opacity ${FADE_OUT}ms ease-in-out`,
+            backgroundColor: "#DEDAF0",
+            boxShadow: "0 0 70px 12px rgba(222, 218, 240, 0.30), 0 0 110px 24px rgba(222, 218, 240, 0.12)",
+            transform: `scale(${orbScale})`,
+            transition: `${orbTransition}, ${orbOpacityTransition}`,
+            opacity: orbOpacity,
           }}
         >
-          {orbLabel}
-        </span>
-      </button>
+          <span
+            style={{
+              opacity: stage === "breathing" ? phaseOpacity : 1,
+              transition: `opacity ${FADE_OUT}ms ease-in-out`,
+            }}
+          >
+            {orbLabel}
+          </span>
+        </button>
+
+        {/* Guide text anchored just beneath the orb (never overlaps). */}
+        {!isForm && (
+          <div className="pointer-events-none absolute left-1/2 top-full mt-8 w-screen max-w-md -translate-x-1/2 px-6">
+            <p
+              className="text-center text-base font-light leading-relaxed tracking-[0.05em] text-bone/70 sm:tracking-[0.12em]"
+              style={{ opacity: guideOpacity, transition: `opacity ${guideFade}ms ease-in-out` }}
+            >
+              {guideText}
+            </p>
+          </div>
+        )}
+      </div>
 
       {/* Email — in normal flow during the form, directly under the orb. */}
       {isForm && (
@@ -345,17 +361,6 @@ export default function Gate({ onEnter, onBegin }: { onEnter: () => void; onBegi
         </div>
       )}
 
-      {/* Guide text — absolute beneath the centered orb during breathing/closing. */}
-      {!isForm && (
-        <div className="pointer-events-none absolute top-[64%] left-0 right-0 flex h-12 items-center justify-center px-6">
-          <p
-            className="text-center text-base font-light tracking-[0.15em] text-bone/70"
-            style={{ opacity: guideOpacity, transition: `opacity ${guideFade}ms ease-in-out` }}
-          >
-            {guideText}
-          </p>
-        </div>
-      )}
     </main>
   );
 }
