@@ -278,8 +278,13 @@ export default function Gate({ onEnter, onBegin }: { onEnter: () => void; onBegi
   // Orb stays present through the closing lines, then fades out slowly after lingering.
   const orbOpacity = orbFade ? 0 : 1;
 
+  // During the form stage the layout is a centered column (title, orb, email)
+  // so nothing overlaps on any screen height. During the breathing/closing
+  // stages the guide text uses absolute positioning beneath the centered orb.
+  const isForm = stage === "form";
+
   return (
-    <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6">
+    <main className="relative flex min-h-screen flex-col items-center justify-center gap-10 overflow-hidden px-6 py-16 sm:gap-12">
       <style>{`
         @keyframes idleBreathe {
           0%, 100% { transform: scale(1); }
@@ -289,9 +294,10 @@ export default function Gate({ onEnter, onBegin }: { onEnter: () => void; onBegi
         @media (prefers-reduced-motion: reduce) { .idle-orb { animation: none; } }
       `}</style>
 
+      {/* Title — in normal flow during the form so it never crowds the orb. */}
       <h1
-        className="pointer-events-none absolute top-[22%] left-0 right-0 px-6 text-center text-2xl font-light tracking-tight text-bone transition-opacity duration-[2000ms] sm:text-4xl"
-        style={{ opacity: stage === "form" ? 1 : 0 }}
+        className="pointer-events-none px-2 text-center text-2xl font-light tracking-tight text-bone transition-opacity duration-[2000ms] sm:text-4xl"
+        style={{ opacity: isForm ? 1 : 0 }}
       >
         are you ready to stop the world?
       </h1>
@@ -300,7 +306,7 @@ export default function Gate({ onEnter, onBegin }: { onEnter: () => void; onBegi
         onClick={submit}
         disabled={stage !== "form" || status === "sending"}
         aria-label="stop the world"
-        className={`${stage === "form" ? "idle-orb" : ""} flex h-44 w-44 items-center justify-center rounded-full font-light tracking-wide text-ink active:scale-95 disabled:cursor-default sm:h-52 sm:w-52 ${stage === "breathing" ? "text-5xl" : "text-sm"}`}
+        className={`${isForm ? "idle-orb" : ""} flex h-44 w-44 shrink-0 items-center justify-center rounded-full font-light tracking-wide text-ink active:scale-95 disabled:cursor-default sm:h-52 sm:w-52 ${stage === "breathing" ? "text-5xl" : "text-sm"}`}
         style={{
           backgroundColor: "#DEDAF0",
           boxShadow: "0 0 70px 12px rgba(222, 218, 240, 0.30), 0 0 110px 24px rgba(222, 218, 240, 0.12)",
@@ -319,31 +325,37 @@ export default function Gate({ onEnter, onBegin }: { onEnter: () => void; onBegi
         </span>
       </button>
 
-      <div className="absolute top-[64%] left-0 right-0 flex h-12 items-center justify-center px-6">
-        <p
-          className="text-center text-base font-light tracking-[0.15em] text-bone/70"
-          style={{ opacity: guideOpacity, transition: `opacity ${guideFade}ms ease-in-out` }}
-        >
-          {guideText}
-        </p>
-      </div>
+      {/* Email — in normal flow during the form, directly under the orb. */}
+      {isForm && (
+        <div className="flex w-full flex-col items-center gap-3">
+          <input
+            type="email"
+            inputMode="email"
+            autoComplete="email"
+            placeholder="your email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && submit()}
+            className="w-72 border-b border-bone/20 bg-transparent py-2 text-center text-sm font-light tracking-wide text-bone placeholder:text-bone/30 focus:border-bone/50 focus:outline-none transition-opacity duration-[2000ms]"
+            style={{ opacity: 1 }}
+          />
+          {status === "error" && (
+            <p className="max-w-xs text-center text-sm font-light text-bone/60">{message}</p>
+          )}
+        </div>
+      )}
 
-      <div className="absolute top-[60%] sm:top-[74%] left-0 right-0 flex flex-col items-center gap-3 px-6">
-        <input
-          type="email"
-          inputMode="email"
-          autoComplete="email"
-          placeholder="your email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && submit()}
-          className="w-72 border-b border-bone/20 bg-transparent py-2 text-center text-sm font-light tracking-wide text-bone placeholder:text-bone/30 focus:border-bone/50 focus:outline-none transition-opacity duration-[2000ms]"
-          style={{ opacity: stage === "form" ? 1 : 0, pointerEvents: stage === "form" ? "auto" : "none" }}
-        />
-        {status === "error" && stage === "form" && (
-          <p className="max-w-xs text-center text-sm font-light text-bone/60">{message}</p>
-        )}
-      </div>
+      {/* Guide text — absolute beneath the centered orb during breathing/closing. */}
+      {!isForm && (
+        <div className="pointer-events-none absolute top-[64%] left-0 right-0 flex h-12 items-center justify-center px-6">
+          <p
+            className="text-center text-base font-light tracking-[0.15em] text-bone/70"
+            style={{ opacity: guideOpacity, transition: `opacity ${guideFade}ms ease-in-out` }}
+          >
+            {guideText}
+          </p>
+        </div>
+      )}
     </main>
   );
 }
