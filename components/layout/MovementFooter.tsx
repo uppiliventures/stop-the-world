@@ -5,7 +5,7 @@ import { TIERS, FORGE_LINKS } from "@/lib/tiers";
 export default function MovementFooter({ hidden }: { hidden: boolean }) {
   return (
     <footer
-      className={`fixed inset-x-0 bottom-0 z-20 px-6 py-5 transition-opacity duration-700 ${
+      className={`fixed inset-x-0 bottom-0 z-20 hidden px-6 py-5 transition-opacity duration-700 sm:block ${
         hidden ? "pointer-events-none opacity-0" : "opacity-40 hover:opacity-90"
       }`}
     >
