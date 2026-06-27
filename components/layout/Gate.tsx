@@ -328,7 +328,7 @@ export default function Gate({ onEnter, onBegin }: { onEnter: () => void; onBegi
         </p>
       </div>
 
-      <div className="absolute top-[74%] left-0 right-0 flex flex-col items-center gap-3 px-6">
+      <div className="absolute top-[68%] sm:top-[74%] left-0 right-0 flex flex-col items-center gap-3 px-6 pb-28 sm:pb-0">
         <input
           type="email"
           inputMode="email"
