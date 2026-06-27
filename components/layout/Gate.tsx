@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { primeAudio } from "@/lib/audioUnlock";
+import { IMAGERY } from "@/lib/imagery";
 
 // Box breathing (Sama Vritti): four equal beats.
 const INHALE = 4;
@@ -95,6 +96,28 @@ export default function Gate({ onEnter, onBegin }: { onEnter: () => void; onBegi
       setMessage("no connection. check your network and try again.");
     }
   }
+
+  // Preload session imagery during the breathing lead-in, so the first image
+  // is fully decoded before the session starts (no choppy first paint).
+  useEffect(() => {
+    if (stage === "form") return;
+    let cancelled = false;
+    (async () => {
+      for (const src of IMAGERY) {
+        if (cancelled) return;
+        try {
+          const img = new Image();
+          img.src = src;
+          if (img.decode) await img.decode().catch(() => {});
+        } catch {
+          // ignore — preloading is best-effort
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [stage]);
 
   // Warnings.
   useEffect(() => {
