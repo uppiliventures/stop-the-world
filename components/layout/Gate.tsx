@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { primeAudio } from "@/lib/audioUnlock";
 
 // Box breathing (Sama Vritti): four equal beats.
 const INHALE = 4;
@@ -70,6 +71,7 @@ export default function Gate({ onEnter, onBegin }: { onEnter: () => void; onBegi
 
   async function submit() {
     if (status === "sending" || stage !== "form") return;
+    primeAudio(); // unlock audio within the user gesture (iOS Safari)
     setStatus("sending");
     setMessage("");
     try {

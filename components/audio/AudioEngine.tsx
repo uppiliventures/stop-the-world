@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { IMAGERY, AUDIO_LOOP } from "@/lib/imagery";
 import { TIERS, FORGE_LINKS, type Tier } from "@/lib/tiers";
+import { getPrimedAudio } from "@/lib/audioUnlock";
 
 const CROSSFADE_HOLD_MS = 18000;
 const FADE_MS = 6000;
@@ -30,9 +31,9 @@ export default function AudioEngine({ tier = "AWARE" }: { tier?: Tier }) {
   const [frame, setFrame] = useState(0);
   const [done, setDone] = useState(false);
   const [doorsIn, setDoorsIn] = useState(false); // doors fade in a beat after "the world returns"
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const ctxRef = useRef<AudioContext | null>(null);
-  const gainRef = useRef<GainNode | null>(null);
+  const fallbackAudioRef = useRef<HTMLAudioElement | null>(null);
+  const elRef = useRef<HTMLAudioElement | null>(null);
+  const volumeFadeRef = useRef<number | null>(null);
 
   // Countdown timer.
   useEffect(() => {
@@ -67,50 +68,64 @@ export default function AudioEngine({ tier = "AWARE" }: { tier?: Tier }) {
     return () => clearInterval(cycle);
   }, []);
 
-  // Audio via Web Audio API for smooth, crackle-free volume ramps.
+  // Audio playback. Prefer the element primed on the orb tap (so iOS Safari
+  // allows it); otherwise fall back to the in-page <audio> element. A simple
+  // volume ramp via requestAnimationFrame keeps it smooth without needing a
+  // user-gesture-bound AudioContext (which iOS often blocks here).
   useEffect(() => {
-    const el = audioRef.current;
+    const primed = getPrimedAudio();
+    const el = primed ?? fallbackAudioRef.current;
     if (!el) return;
+    elRef.current = el;
 
-    let ctx: AudioContext;
-    let gain: GainNode;
     try {
-      ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const source = ctx.createMediaElementSource(el);
-      gain = ctx.createGain();
-      source.connect(gain);
-      gain.connect(ctx.destination);
-      ctxRef.current = ctx;
-      gainRef.current = gain;
+      el.loop = true;
+      el.currentTime = 0;
+      el.volume = 0;
+      const playPromise = el.play();
+      if (playPromise && typeof playPromise.catch === "function") {
+        playPromise.catch(() => {});
+      }
 
-      gain.gain.setValueAtTime(0.0001, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(TARGET_VOLUME, ctx.currentTime + 3);
-
-      el.play().catch(() => {});
-      if (ctx.state === "suspended") ctx.resume();
+      // Gentle fade-in to target volume.
+      const start = Date.now();
+      const FADE_IN_MS = 3000;
+      const fadeIn = () => {
+        const t = Math.min(1, (Date.now() - start) / FADE_IN_MS);
+        el.volume = TARGET_VOLUME * t;
+        if (t < 1) volumeFadeRef.current = requestAnimationFrame(fadeIn);
+      };
+      volumeFadeRef.current = requestAnimationFrame(fadeIn);
     } catch {
-      el.volume = TARGET_VOLUME;
-      el.play().catch(() => {});
+      // ignore
     }
 
     return () => {
-      el.pause();
-      if (ctxRef.current) {
-        ctxRef.current.close().catch(() => {});
-        ctxRef.current = null;
+      if (volumeFadeRef.current) cancelAnimationFrame(volumeFadeRef.current);
+      try {
+        el.pause();
+        el.currentTime = 0;
+      } catch {
+        // ignore
       }
     };
   }, []);
 
   // Smooth audio fade-out over the final seconds.
   useEffect(() => {
-    const gain = gainRef.current;
-    const ctx = ctxRef.current;
-    if (!gain || !ctx) return;
+    const el = elRef.current;
+    if (!el) return;
     if (remaining === END_FADE_S) {
-      gain.gain.cancelScheduledValues(ctx.currentTime);
-      gain.gain.setValueAtTime(Math.max(0.0001, gain.gain.value), ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + END_FADE_S);
+      if (volumeFadeRef.current) cancelAnimationFrame(volumeFadeRef.current);
+      const startVol = el.volume;
+      const start = Date.now();
+      const FADE_OUT_MS = END_FADE_S * 1000;
+      const fadeOut = () => {
+        const t = Math.min(1, (Date.now() - start) / FADE_OUT_MS);
+        el.volume = startVol * (1 - t);
+        if (t < 1) volumeFadeRef.current = requestAnimationFrame(fadeOut);
+      };
+      volumeFadeRef.current = requestAnimationFrame(fadeOut);
     }
   }, [remaining]);
 
@@ -171,7 +186,8 @@ export default function AudioEngine({ tier = "AWARE" }: { tier?: Tier }) {
         )}
       </div>
 
-      <audio ref={audioRef} src={AUDIO_LOOP} preload="auto" crossOrigin="anonymous" />
+      {/* Fallback element, used only if priming on the orb tap did not run. */}
+      <audio ref={fallbackAudioRef} src={AUDIO_LOOP} preload="auto" crossOrigin="anonymous" loop />
     </div>
   );
 }
