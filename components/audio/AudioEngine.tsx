@@ -111,6 +111,38 @@ export default function AudioEngine({ tier = "AWARE" }: { tier?: Tier }) {
     };
   }, []);
 
+  // Keep the screen awake during the session so it doesn't hit the screensaver
+  // mid-practice (screen-on use). Wake Lock auto-releases when the tab is
+  // hidden, so re-acquire on visibility change. No-ops where unsupported.
+  useEffect(() => {
+    let lock: any = null;
+    let cancelled = false;
+
+    const acquire = async () => {
+      try {
+        const wl = (navigator as any).wakeLock;
+        if (!wl || document.visibilityState !== "visible") return;
+        lock = await wl.request("screen");
+      } catch {
+        // unsupported or denied — fine, just let the screen behave normally
+      }
+    };
+
+    const onVisible = () => {
+      if (!cancelled && document.visibilityState === "visible") acquire();
+    };
+
+    acquire();
+    document.addEventListener("visibilitychange", onVisible);
+
+    return () => {
+      cancelled = true;
+      document.removeEventListener("visibilitychange", onVisible);
+      try { lock?.release?.(); } catch {}
+      lock = null;
+    };
+  }, []);
+
   // Smooth audio fade-out over the final seconds, with a guaranteed hard stop.
   useEffect(() => {
     const el = elRef.current;
