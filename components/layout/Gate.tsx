@@ -321,7 +321,7 @@ export default function Gate({ onEnter, onBegin }: { onEnter: () => void; onBegi
 
       {/* Title — in normal flow during the form so it never crowds the orb. */}
       <h1
-        className="pointer-events-none px-2 text-center text-2xl font-light tracking-tight text-bone transition-opacity duration-[2000ms] sm:text-3xl"
+        className="pointer-events-none px-2 text-center text-xl font-light tracking-tight text-bone transition-opacity duration-[2000ms] sm:text-2xl"
         style={{ opacity: isForm ? 1 : 0 }}
       >
         are you ready to stop the world?
