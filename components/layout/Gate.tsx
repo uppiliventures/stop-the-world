@@ -336,8 +336,8 @@ export default function Gate({ onEnter, onBegin }: { onEnter: () => void; onBegi
           aria-label="stop the world"
           className={`${isForm ? "idle-orb" : ""} flex h-44 w-44 shrink-0 items-center justify-center rounded-full font-light tracking-wide text-ink active:scale-95 disabled:cursor-default sm:h-52 sm:w-52 ${stage === "breathing" ? "text-5xl" : "text-sm"}`}
           style={{
-            backgroundColor: "#DEDAF0",
-            boxShadow: "0 0 70px 12px rgba(222, 218, 240, 0.30), 0 0 110px 24px rgba(222, 218, 240, 0.12)",
+            backgroundColor: "#CFC9E8",
+            boxShadow: "0 0 90px 20px rgba(207, 201, 232, 0.18), 0 0 150px 40px rgba(207, 201, 232, 0.07)",
             transform: `scale(${orbScale})`,
             transition: `${orbTransition}, ${orbOpacityTransition}`,
             opacity: orbOpacity,
