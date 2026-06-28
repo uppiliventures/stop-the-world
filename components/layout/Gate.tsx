@@ -295,7 +295,7 @@ export default function Gate({ onEnter, onBegin }: { onEnter: () => void; onBegi
 
   const orbLabel =
     stage === "form" && status !== "sending"
-      ? "stop the world"
+      ? "enter"
       : stage === "breathing"
       ? String(count)
       : "";
