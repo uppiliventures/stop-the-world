@@ -178,6 +178,40 @@ export default function Gate({ onEnter, onBegin }: { onEnter: () => void; onBegi
     };
   }, [stage]);
 
+  // Keep the screen awake for the WHOLE experience (breathing through audio),
+  // not just the audio stage. Acquire once we leave the form; release at the end
+  // or on unmount. Wake Lock auto-releases when the tab hides, so re-acquire on
+  // visibility change. No-ops where unsupported (e.g. iOS < 16.4).
+  useEffect(() => {
+    if (stage === "form") return;
+    let lock: any = null;
+    let cancelled = false;
+
+    const acquire = async () => {
+      try {
+        const wl = (navigator as any).wakeLock;
+        if (!wl || document.visibilityState !== "visible") return;
+        lock = await wl.request("screen");
+      } catch {
+        // unsupported or denied — let the screen behave normally
+      }
+    };
+
+    const onVisible = () => {
+      if (!cancelled && document.visibilityState === "visible") acquire();
+    };
+
+    acquire();
+    document.addEventListener("visibilitychange", onVisible);
+
+    return () => {
+      cancelled = true;
+      document.removeEventListener("visibilitychange", onVisible);
+      try { lock?.release?.(); } catch {}
+      lock = null;
+    };
+  }, [stage]);
+
   // Continuous box breathing for BREATHS cycles. Real-time clock.
   useEffect(() => {
     if (stage !== "breathing") return;
