@@ -120,24 +120,35 @@ export default function AudioEngine({ tier = "AWARE" }: { tier?: Tier }) {
       const startVol = el.volume;
       const start = Date.now();
       const FADE_OUT_MS = END_FADE_S * 1000;
+
+      // Stops EVERY audio source dead: disable loop first (a paused but still
+      // looping element can resume), then pause and reset. Covers both the
+      // primed element and the fallback, so it doesn't matter which is playing.
+      const killAll = () => {
+        if (volumeFadeRef.current) cancelAnimationFrame(volumeFadeRef.current);
+        [elRef.current, fallbackAudioRef.current].forEach((a) => {
+          if (!a) return;
+          a.loop = false;
+          a.volume = 0;
+          a.pause();
+          try { a.currentTime = 0; } catch {}
+        });
+      };
+
       const fadeOut = () => {
         const t = Math.min(1, (Date.now() - start) / FADE_OUT_MS);
         el.volume = startVol * (1 - t);
         if (t < 1) {
           volumeFadeRef.current = requestAnimationFrame(fadeOut);
         } else {
-          el.pause();
+          killAll();
         }
       };
       volumeFadeRef.current = requestAnimationFrame(fadeOut);
 
-      // Backstop: regardless of whether the rAF fade completes (mobile throttles
-      // rAF when the screen dims/backgrounds), force-stop the audio at the end.
-      const hardStop = setTimeout(() => {
-        if (volumeFadeRef.current) cancelAnimationFrame(volumeFadeRef.current);
-        el.volume = 0;
-        el.pause();
-      }, FADE_OUT_MS + 250);
+      // Backstop: mobile throttles rAF when the screen dims/backgrounds, so the
+      // fade can stall. This timer force-kills all audio at the end regardless.
+      const hardStop = setTimeout(killAll, FADE_OUT_MS + 250);
       return () => clearTimeout(hardStop);
     }
   }, [remaining]);
