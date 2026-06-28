@@ -111,7 +111,7 @@ export default function AudioEngine({ tier = "AWARE" }: { tier?: Tier }) {
     };
   }, []);
 
-  // Smooth audio fade-out over the final seconds.
+  // Smooth audio fade-out over the final seconds, with a guaranteed hard stop.
   useEffect(() => {
     const el = elRef.current;
     if (!el) return;
@@ -123,9 +123,22 @@ export default function AudioEngine({ tier = "AWARE" }: { tier?: Tier }) {
       const fadeOut = () => {
         const t = Math.min(1, (Date.now() - start) / FADE_OUT_MS);
         el.volume = startVol * (1 - t);
-        if (t < 1) volumeFadeRef.current = requestAnimationFrame(fadeOut);
+        if (t < 1) {
+          volumeFadeRef.current = requestAnimationFrame(fadeOut);
+        } else {
+          el.pause();
+        }
       };
       volumeFadeRef.current = requestAnimationFrame(fadeOut);
+
+      // Backstop: regardless of whether the rAF fade completes (mobile throttles
+      // rAF when the screen dims/backgrounds), force-stop the audio at the end.
+      const hardStop = setTimeout(() => {
+        if (volumeFadeRef.current) cancelAnimationFrame(volumeFadeRef.current);
+        el.volume = 0;
+        el.pause();
+      }, FADE_OUT_MS + 250);
+      return () => clearTimeout(hardStop);
     }
   }, [remaining]);
 
