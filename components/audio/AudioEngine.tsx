@@ -35,20 +35,37 @@ export default function AudioEngine({ tier = "AWARE" }: { tier?: Tier }) {
   const elRef = useRef<HTMLAudioElement | null>(null);
   const volumeFadeRef = useRef<number | null>(null);
 
-  // Countdown timer.
+  // Countdown timer. The audio element's own clock is the single source of
+  // truth: audio.currentTime reflects REAL elapsed playback and does not
+  // throttle when the tab is backgrounded (unlike a plain setInterval counter).
+  // So we DERIVE remaining from it rather than counting down independently.
+  // This keeps the visual countdown, the fade-out and the end-stop all locked
+  // to the true audio position even after the screen has been off.
+  // NOTE: valid only while the session is shorter than the audio track (the
+  // 10-min tier on a ~14-min track never loops, so currentTime maps cleanly to
+  // elapsed). Longer tiers that loop need accumulated-elapsed handling (todo).
   useEffect(() => {
     const tick = setInterval(() => {
-      setRemaining((r) => {
-        if (r <= 1) {
+      const el = elRef.current;
+      const elapsed = el && el.currentTime > 0 ? el.currentTime : null;
+      setRemaining(() => {
+        // Fall back to a simple decrement only if the audio clock isn't ready
+        // yet (first moment before playback has truly begun).
+        const next =
+          elapsed !== null
+            ? Math.max(0, Math.ceil(totalSeconds - elapsed))
+            : null;
+        if (next === null) return totalSeconds;
+        if (next <= 0) {
           clearInterval(tick);
           setDone(true);
           return 0;
         }
-        return r - 1;
+        return next;
       });
     }, 1000);
     return () => clearInterval(tick);
-  }, []);
+  }, [totalSeconds]);
 
   // When the session ends, let "the world returns" settle, then gently reveal the doors.
   useEffect(() => {
@@ -113,10 +130,14 @@ export default function AudioEngine({ tier = "AWARE" }: { tier?: Tier }) {
 
 
   // Smooth audio fade-out over the final seconds, with a guaranteed hard stop.
+  // Trigger on a THRESHOLD (<=), not exact equality: when returning from the
+  // background, remaining can jump straight past END_FADE_S, so an === check
+  // could miss the moment entirely. fadeStartedRef ensures it only fires once.
   useEffect(() => {
     const el = elRef.current;
     if (!el) return;
-    if (remaining === END_FADE_S) {
+    if (remaining <= END_FADE_S && remaining > 0 && !fadeStartedRef.current) {
+      fadeStartedRef.current = true;
       if (volumeFadeRef.current) cancelAnimationFrame(volumeFadeRef.current);
       const startVol = el.volume;
       const start = Date.now();
