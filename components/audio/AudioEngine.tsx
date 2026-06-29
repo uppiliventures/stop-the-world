@@ -31,6 +31,8 @@ export default function AudioEngine({ tier = "AWARE" }: { tier?: Tier }) {
   const [frame, setFrame] = useState(0);
   const [done, setDone] = useState(false);
   const [doorsIn, setDoorsIn] = useState(false); // doors fade in a beat after "the world returns"
+  const [paused, setPaused] = useState(false); // user-controlled pause/resume (interruption recovery)
+  const [controlsVisible, setControlsVisible] = useState(false); // tap-to-reveal pause glyph
   const fallbackAudioRef = useRef<HTMLAudioElement | null>(null);
   const elRef = useRef<HTMLAudioElement | null>(null);
   const volumeFadeRef = useRef<number | null>(null);
@@ -176,9 +178,64 @@ export default function AudioEngine({ tier = "AWARE" }: { tier?: Tier }) {
     }
   }, [remaining]);
 
+  // Tap anywhere during the active session to reveal the pause control; it
+  // auto-hides after a few seconds so the screen returns to its calm state.
+  const controlsHideRef = useRef<number | null>(null);
+  const revealControls = () => {
+    if (done) return; // closing screen has its own controls (the doors)
+    setControlsVisible(true);
+    if (controlsHideRef.current) window.clearTimeout(controlsHideRef.current);
+    controlsHideRef.current = window.setTimeout(() => setControlsVisible(false), 3500);
+  };
+
+  // Pause/resume. Because `remaining` is derived from audio.currentTime, pausing
+  // the audio also freezes the countdown automatically — they stay in sync.
+  // Resume calls play(), which (being a user gesture) also recovers audio that
+  // an interruption (call, etc.) may have killed.
+  const togglePause = () => {
+    const a = elRef.current ?? fallbackAudioRef.current;
+    if (!a) return;
+    if (paused) {
+      const r = a.play();
+      if (r && typeof r.catch === "function") r.catch(() => {});
+      setPaused(false);
+    } else {
+      a.pause();
+      setPaused(true);
+    }
+    // keep the control on screen while interacting
+    setControlsVisible(true);
+    if (controlsHideRef.current) window.clearTimeout(controlsHideRef.current);
+    controlsHideRef.current = window.setTimeout(() => setControlsVisible(false), 3500);
+  };
+
   return (
-    <div className="fixed inset-0 overflow-hidden bg-ink animate-[sessionFade_2s_ease-in]">
+    <div
+      className="fixed inset-0 overflow-hidden bg-ink animate-[sessionFade_2s_ease-in]"
+      onClick={revealControls}
+    >
       <style>{`@keyframes sessionFade { from { opacity: 0; } to { opacity: 1; } }`}</style>
+
+      {/* Faint pause/resume control — revealed on tap, auto-hides. Active session only. */}
+      {!done && (
+        <button
+          onClick={(e) => { e.stopPropagation(); togglePause(); }}
+          aria-label={paused ? "resume" : "pause"}
+          className="absolute bottom-10 left-1/2 z-20 -translate-x-1/2 text-bone/40 transition-opacity duration-700 hover:text-bone/70"
+          style={{ opacity: controlsVisible ? 1 : 0, pointerEvents: controlsVisible ? "auto" : "none" }}
+        >
+          {paused ? (
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          ) : (
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+              <rect x="6" y="5" width="4" height="14" rx="1" />
+              <rect x="14" y="5" width="4" height="14" rx="1" />
+            </svg>
+          )}
+        </button>
+      )}
 
       {IMAGERY.map((src, i) => (
         <img
