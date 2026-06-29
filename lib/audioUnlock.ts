@@ -18,7 +18,7 @@ export function primeAudio(): void {
   try {
     if (!el) {
       el = new Audio();
-      el.loop = true;
+      el.loop = false;
       el.preload = "auto";
       el.crossOrigin = "anonymous";
       el.src = AUDIO_LOOP;

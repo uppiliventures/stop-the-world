@@ -99,7 +99,7 @@ export default function AudioEngine({ tier = "AWARE" }: { tier?: Tier }) {
     elRef.current = el;
 
     try {
-      el.loop = true;
+      el.loop = false; // session-length file: play once, don't loop (loop swallowed the end screen)
       el.currentTime = 0;
       el.volume = 0;
       const playPromise = el.play();
@@ -291,7 +291,7 @@ export default function AudioEngine({ tier = "AWARE" }: { tier?: Tier }) {
       </div>
 
       {/* Fallback element, used only if priming on the orb tap did not run. */}
-      <audio ref={fallbackAudioRef} src={AUDIO_LOOP} preload="auto" crossOrigin="anonymous" loop />
+      <audio ref={fallbackAudioRef} src={AUDIO_LOOP} preload="auto" crossOrigin="anonymous" />
     </div>
   );
 }
