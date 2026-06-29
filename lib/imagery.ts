@@ -9,4 +9,4 @@ export const IMAGERY: string[] = [
   "/imagery/stage5.png",
 ];
 
-export const AUDIO_LOOP = "/audio/meditationspherev2.mp3";
+export const AUDIO_LOOP = "/audio/meditationsphere10m.mp3";
