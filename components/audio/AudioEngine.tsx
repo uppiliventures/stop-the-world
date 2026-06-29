@@ -34,6 +34,7 @@ export default function AudioEngine({ tier = "AWARE" }: { tier?: Tier }) {
   const fallbackAudioRef = useRef<HTMLAudioElement | null>(null);
   const elRef = useRef<HTMLAudioElement | null>(null);
   const volumeFadeRef = useRef<number | null>(null);
+  const fadeStartedRef = useRef(false);
 
   // Countdown timer. The audio element's own clock is the single source of
   // truth: audio.currentTime reflects REAL elapsed playback and does not
