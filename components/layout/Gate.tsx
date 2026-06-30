@@ -72,29 +72,14 @@ export default function Gate({ onEnter, onBegin }: { onEnter: () => void; onBegi
 
   async function submit() {
     if (status === "sending" || stage !== "form") return;
-    primeAudio(); // unlock audio within the user gesture (iOS Safari)
-    setStatus("sending");
-    setMessage("");
-    try {
-      const res = await fetch("/api/email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.ok) {
-        setStatus("error");
-        setMessage(data.error ?? "something went wrong. try again.");
-        return;
-      }
-      setStatus("idle");
-      onBegin?.();
-      setStage("warning");
-      setWarnIdx(0);
-    } catch {
-      setStatus("error");
-      setMessage("no connection. check your network and try again.");
-    }
+    primeAudio(); // unlock audio within the user gesture (iOS Safari) — MUST stay on this tap
+    // Email is no longer required to enter. We simply prime audio and begin the
+    // experience. The optional email capture now lives on the closing screen,
+    // where it is asked after the value has been felt (better conversion, and
+    // it respects people who do not wish to give an email).
+    onBegin?.();
+    setStage("warning");
+    setWarnIdx(0);
   }
 
   // Preload session imagery during the breathing lead-in, so the first image
@@ -400,25 +385,8 @@ export default function Gate({ onEnter, onBegin }: { onEnter: () => void; onBegi
         )}
       </div>
 
-      {/* Email — in normal flow during the form, directly under the orb. */}
-      {isForm && (
-        <div className="flex w-full flex-col items-center gap-3">
-          <input
-            type="email"
-            inputMode="email"
-            autoComplete="email"
-            placeholder="your email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && submit()}
-            className="w-72 border-b border-bone/20 bg-transparent py-2 text-center text-sm font-light tracking-wide text-bone placeholder:text-bone/30 focus:border-bone/50 focus:outline-none transition-opacity duration-[2000ms]"
-            style={{ opacity: 1 }}
-          />
-          {status === "error" && (
-            <p className="max-w-xs text-center text-sm font-light text-bone/60">{message}</p>
-          )}
-        </div>
-      )}
+      {/* Email moved to the closing screen (AudioEngine) — asked after the
+          experience, and optional. The front is now a pure tap-to-enter. */}
 
     </main>
   );

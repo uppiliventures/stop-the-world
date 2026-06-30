@@ -33,6 +33,24 @@ export default function AudioEngine({ tier = "AWARE" }: { tier?: Tier }) {
   const [doorsIn, setDoorsIn] = useState(false); // doors fade in a beat after "the world returns"
   const [paused, setPaused] = useState(false); // user-controlled pause/resume (interruption recovery)
   const [controlsVisible, setControlsVisible] = useState(false); // tap-to-reveal pause glyph
+  // Optional email capture on the closing screen (asked after the experience).
+  const [stwEmail, setStwEmail] = useState("");
+  const [stwStatus, setStwStatus] = useState<"idle" | "sending" | "done" | "error">("idle");
+  const submitEmail = async () => {
+    if (stwStatus === "sending" || stwStatus === "done") return;
+    if (!stwEmail || !stwEmail.includes("@")) { setStwStatus("error"); return; }
+    setStwStatus("sending");
+    try {
+      const res = await fetch("/api/email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: stwEmail }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) { setStwStatus("error"); return; }
+      setStwStatus("done");
+    } catch { setStwStatus("error"); }
+  };
   const fallbackAudioRef = useRef<HTMLAudioElement | null>(null);
   const elRef = useRef<HTMLAudioElement | null>(null);
   const volumeFadeRef = useRef<number | null>(null);
@@ -281,6 +299,41 @@ export default function AudioEngine({ tier = "AWARE" }: { tier?: Tier }) {
                   ) : null
                 )}
               </nav>
+
+              <div className="mt-10 flex w-full flex-col items-center gap-3">
+                {stwStatus === "done" ? (
+                  <p className="text-[11px] lowercase tracking-[0.25em] text-bone/50">
+                    thank you. we will keep you close.
+                  </p>
+                ) : (
+                  <>
+                    <p className="max-w-xs text-center text-[11px] lowercase leading-relaxed tracking-[0.15em] text-bone/40">
+                      if this gave you something, leave your email to stay close — irl events, gentle updates. or simply return whenever.
+                    </p>
+                    <input
+                      type="email"
+                      inputMode="email"
+                      autoComplete="email"
+                      placeholder="your email"
+                      value={stwEmail}
+                      onChange={(e) => setStwEmail(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && submitEmail()}
+                      className="w-64 border-b border-bone/20 bg-transparent py-2 text-center text-sm font-light tracking-wide text-bone placeholder:text-bone/25 focus:border-bone/50 focus:outline-none"
+                    />
+                    <button
+                      onClick={submitEmail}
+                      className="text-[11px] lowercase tracking-[0.25em] text-bone/40 transition-colors duration-500 hover:text-bone/70"
+                    >
+                      {stwStatus === "sending" ? "..." : "stay connected"}
+                    </button>
+                    {stwStatus === "error" && (
+                      <p className="text-[11px] lowercase tracking-[0.2em] text-bone/40">
+                        please enter a valid email
+                      </p>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
           </>
         ) : (
