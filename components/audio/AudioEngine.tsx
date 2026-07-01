@@ -21,8 +21,6 @@ const DOORS: { label: string; href: string }[] = [
   { label: "book", href: FORGE_LINKS.books },
   { label: "movement", href: FORGE_LINKS.movement },
   { label: "journal", href: FORGE_LINKS.journal },
-  { label: "peace", href: TIERS.PEACE.stripeLink },
-  { label: "harmony", href: TIERS.HARMONY.stripeLink },
 ];
 
 export default function AudioEngine({ tier = "AWARE" }: { tier?: Tier }) {
@@ -307,9 +305,6 @@ export default function AudioEngine({ tier = "AWARE" }: { tier?: Tier }) {
                   </p>
                 ) : (
                   <>
-                    <p className="max-w-xs text-center text-[11px] lowercase leading-relaxed tracking-[0.15em] text-bone/40">
-                      if this gave you something, leave your email to stay close — irl events, gentle updates. or simply return whenever.
-                    </p>
                     <input
                       type="email"
                       inputMode="email"
