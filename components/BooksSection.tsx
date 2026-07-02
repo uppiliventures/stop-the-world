@@ -31,7 +31,7 @@ const books = [
     blurb:
       "a short, quiet book for people with too much noise and too little time. one move — stopping the world for a few minutes — and every room of an ordinary day you can use it in. no belief required. nothing is asked of you.",
     meta: "ebook · ~45 pages · read in one sitting",
-    price: CONFIG.stillnessPrice,
+    price: null, // Removed from rendering
     href: CONFIG.stillnessCheckoutUrl,
     cta: "read the little book",
   },
@@ -121,7 +121,6 @@ export default function BooksSection() {
                     style={{ color: BONE, opacity: 0.35 }}
                   >
                     {book.meta}
-                    {book.price ? " · " + book.price : ""}
                   </p>
                 </div>
 
@@ -152,9 +151,3 @@ export default function BooksSection() {
     </section>
   );
 }
-
-// ============================================================================
-// STRIPE SETUP — see the message accompanying this file for exact fields.
-// Once your Payment Link is created, paste it into
-// CONFIG.stillnessCheckoutUrl above. That's the only change needed.
-// ============================================================================
