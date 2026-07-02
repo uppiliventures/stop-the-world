@@ -9,11 +9,11 @@
 
 // ----------------------------------------------------------------------------
 const CONFIG = {
-  // Stripe Payment Link for the little book of stillness (£4.99).
-  stillnessCheckoutUrl: "https://buy.stripe.com/9B64gyeCL50Wcjg2QLbZe06",
+  // Payhip checkout for the little book of stillness (£4.99).
+  stillnessCheckoutUrl: "https://payhip.com/b/8DIfq",  // little book
   stillnessPrice: "£4.99",
-  // Forge — singular subdomain.
-  forgeUrl: "https://payhip.com/b/oDwky",
+  // Forge — payhip checkout.
+  forgeUrl: "https://payhip.com/b/oDwky", // forge book
   // Link back into the app / home.
   homeUrl: "/",
 };

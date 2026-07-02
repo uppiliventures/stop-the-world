@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+
+Disallow: /the-little-book-of-stillness-c3f7d59d.pdf
+Disallow: /*.pdf$
+
+Sitemap: https://stoptheworld.app/sitemap.xml
