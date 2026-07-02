@@ -13,7 +13,7 @@ const CONFIG = {
   stillnessCheckoutUrl: "https://buy.stripe.com/9B64gyeCL50Wcjg2QLbZe06",
   stillnessPrice: "£4.99",
   // Forge — singular subdomain.
-  forgeUrl: "https://book.forgeofthesoul.com",
+  forgeUrl: "https://payhip.com/b/oDwky",
   // Link back into the app / home.
   homeUrl: "/",
 };
