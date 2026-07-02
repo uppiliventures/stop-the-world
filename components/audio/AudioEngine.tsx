@@ -18,7 +18,7 @@ function format(seconds: number): string {
 
 // Gentle ecosystem doors, shown only at the very end (the peak moment).
 const DOORS: { label: string; href: string }[] = [
-  { label: "book", href: FORGE_LINKS.books },
+  { label: "books", href: "/books" }, // Updated label and local route
   { label: "movement", href: FORGE_LINKS.movement },
   { label: "journal", href: FORGE_LINKS.journal },
 ];
