@@ -134,7 +134,6 @@ export default function BooksSection() {
                     style={{ borderColor: "rgba(243,243,241,0.35)", color: BONE }}
                   >
                     {book.cta}
-                    {book.price ? " · " + book.price : ""}
                   </a>
                 </div>
               </div>
