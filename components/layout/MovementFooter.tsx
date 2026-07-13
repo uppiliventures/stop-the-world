@@ -6,7 +6,7 @@ import Link from "next/link";
 export default function MovementFooter({ hidden }: { hidden: boolean }) {
   return (
     <footer
-      className={`fixed inset-x-0 bottom-0 z-20 hidden px-6 py-5 transition-opacity duration-700 sm:block ${
+      className={`fixed inset-x-0 bottom-0 z-20 block px-6 py-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] transition-opacity duration-700 ${
         hidden ? "pointer-events-none opacity-0" : "opacity-40 hover:opacity-90"
       }`}
     >
