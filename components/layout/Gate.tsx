@@ -337,8 +337,8 @@ export default function Gate({ onEnter, onBegin }: { onEnter: () => void; onBegi
 
   return (
     <main
-      className={`relative flex min-h-screen flex-col items-center justify-center gap-10 overflow-hidden px-6 py-16 transition-opacity duration-[2000ms] ease-out sm:gap-12 ${
-        isForm ? "pb-44 sm:pb-16" : ""
+      className={`relative flex min-h-screen flex-col items-center gap-10 overflow-hidden px-6 py-16 transition-opacity duration-[2000ms] ease-out sm:justify-center sm:gap-12 ${
+        isForm ? "justify-start pt-24 pb-44 sm:pt-16 sm:pb-16" : "justify-center"
       }`}
       style={{ opacity: mounted ? 1 : 0 }}
     >
