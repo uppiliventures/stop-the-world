@@ -11,18 +11,20 @@ export default function MovementFooter({ hidden }: { hidden: boolean }) {
       }`}
     >
       <nav className="mx-auto grid max-w-5xl grid-cols-2 gap-x-8 gap-y-3 text-[11px] uppercase tracking-[0.2em] text-bone sm:grid-cols-5">
-        <Item index="01" label="Movement" sub="Forge of the Soul" href={FORGE_LINKS.movement} />
-        
-        {/* 02 BOOKS — Completely clean local link to the catalog */}
+        <Item index="01" label="The Forge" sub="the courage to become" href={FORGE_LINKS.movement} />
+
+        {/* 02 BOOKS — clean local link to the catalog */}
         <Item index="02" label="Books" sub="stillness & forge" href="/books" />
-        
-        <Item index="03" label="Merch" sub="Heavy streetwear & desk" href={FORGE_LINKS.merch} />
-        <Item index="04" label="Events" sub="Cohorts & sanctuary" href={FORGE_LINKS.events} />
-        
+
+        {/* 03 MERCH — the founder's drop, local /drop page */}
+        <Item index="03" label="Merch" sub="the founder's drop" href="/drop" />
+
+        <Item index="04" label="Events" sub="gatherings on the horizon" href="/events" />
+
         <Link href="/privacy" className="hover:text-violet-glow flex flex-col gap-1">
           <span className="text-bone/50">05</span>
           <span className="text-bone">Privacy</span>
-          <span className="text-[10px] normal-case tracking-normal text-bone/40">Data & terms</span>
+          <span className="text-[10px] normal-case tracking-normal text-bone/40">data &amp; terms</span>
         </Link>
       </nav>
     </footer>
@@ -38,7 +40,7 @@ function Item({ index, label, sub, href }: { index: string; label: string; sub: 
     </div>
   );
   if (!href) return <div className="cursor-default">{content}</div>;
-  
+
   // Internal routing check so Next.js handles local links smoothly without a hard refresh
   if (href.startsWith("/")) {
     return (
