@@ -62,6 +62,7 @@ export default function Gate({ onEnter, onBegin }: { onEnter: () => void; onBegi
   const [closeIdx, setCloseIdx] = useState(0);
   const [closeOpacity, setCloseOpacity] = useState(0);
   const [orbFade, setOrbFade] = useState(false); // triggers the slow orb dissolve at the very end
+  const [mounted, setMounted] = useState(false); // gentle fade-in of the whole entry on first load
   const [settling, setSettling] = useState(false); // quiet beat after the last breath, before closing
   const [phase, setPhase] = useState<Phase>("in");
   const [orbBig, setOrbBig] = useState(false);
@@ -81,6 +82,13 @@ export default function Gate({ onEnter, onBegin }: { onEnter: () => void; onBegi
     setStage("warning");
     setWarnIdx(0);
   }
+
+  // Gentle fade-in of the whole entry screen on first load (orb + title),
+  // so nothing "bangs in". A short delay lets the paint settle, then it eases in.
+  useEffect(() => {
+    const t = setTimeout(() => setMounted(true), 60);
+    return () => clearTimeout(t);
+  }, []);
 
   // Preload session imagery during the breathing lead-in, so the first image
   // is fully decoded before the session starts (no choppy first paint).
@@ -328,7 +336,12 @@ export default function Gate({ onEnter, onBegin }: { onEnter: () => void; onBegi
   const isForm = stage === "form";
 
   return (
-    <main className="relative flex min-h-screen flex-col items-center justify-center gap-10 overflow-hidden px-6 py-16 sm:gap-12">
+    <main
+      className={`relative flex min-h-screen flex-col items-center justify-center gap-10 overflow-hidden px-6 py-16 transition-opacity duration-[2000ms] ease-out sm:gap-12 ${
+        isForm ? "pb-44 sm:pb-16" : ""
+      }`}
+      style={{ opacity: mounted ? 1 : 0 }}
+    >
       <style>{`
         @keyframes idleBreathe {
           0%, 100% { transform: scale(1); }
