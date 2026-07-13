@@ -1,13 +1,24 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { FORGE_LINKS } from "@/lib/tiers";
 import Link from "next/link";
 
 export default function MovementFooter({ hidden }: { hidden: boolean }) {
+  // Gentle mount fade so the footer eases in softly on first load (matching the
+  // orb's calm entrance) rather than snapping to full opacity.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setMounted(true), 60);
+    return () => clearTimeout(t);
+  }, []);
+
+  const visible = mounted && !hidden;
+
   return (
     <footer
-      className={`fixed inset-x-0 bottom-0 z-20 block px-6 py-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] transition-opacity duration-700 ${
-        hidden ? "pointer-events-none opacity-0" : "opacity-40 hover:opacity-90"
+      className={`fixed inset-x-0 bottom-0 z-20 block px-6 py-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] transition-opacity duration-[1200ms] ${
+        visible ? "opacity-40 hover:opacity-90" : "pointer-events-none opacity-0"
       }`}
     >
       <nav className="mx-auto grid max-w-5xl grid-cols-2 gap-x-8 gap-y-3 text-[11px] uppercase tracking-[0.2em] text-bone sm:grid-cols-5">

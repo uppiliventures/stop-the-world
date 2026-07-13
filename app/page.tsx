@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Gate from "@/components/layout/Gate";
 import AudioEngine from "@/components/audio/AudioEngine";
 import MovementFooter from "@/components/layout/MovementFooter";
@@ -9,16 +9,12 @@ export default function Home() {
   const [inSession, setInSession] = useState(false);
   const [ritualStarted, setRitualStarted] = useState(false);
 
-  // Footer fades IN a beat after the orb settles, so the entrance is sequenced:
-  // orb first, then the nav arrives beneath it.
-  const [footerReady, setFooterReady] = useState(false);
-  useEffect(() => {
-    const t = setTimeout(() => setFooterReady(true), 4000); // orb fades in over 2s, then footer follows 2s later (total 4s)
-    return () => clearTimeout(t);
-  }, []);
-
-  // Hidden during session/ritual (as before), and until the entrance delay passes.
-  const footerHidden = inSession || ritualStarted || !footerReady;
+  // Footer is hidden only during the session/ritual (as before). On the entry
+  // screen it is always available — navigation shouldn't be time-gated. Calm is
+  // achieved through the footer's low opacity, not by delaying it. The orb still
+  // fades in gently (that's content/atmosphere, handled in Gate); the nav simply
+  // appears with everything else and stays quiet.
+  const footerHidden = inSession || ritualStarted;
 
   return (
     <>
