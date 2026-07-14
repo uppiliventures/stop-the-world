@@ -5,8 +5,8 @@ import { FORGE_LINKS } from "@/lib/tiers";
 import Link from "next/link";
 
 export default function MovementFooter({ hidden }: { hidden: boolean }) {
-  // Gentle mount fade so the footer eases in softly on first load (matching the
-  // orb's calm entrance) rather than snapping to full opacity.
+  // Gentle mount fade so the footer eases in softly on first load rather than
+  // snapping to full opacity.
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 60);
@@ -17,53 +17,44 @@ export default function MovementFooter({ hidden }: { hidden: boolean }) {
 
   return (
     <footer
-      className={`fixed inset-x-0 bottom-0 z-20 block px-6 py-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] transition-opacity duration-[1200ms] ${
-        visible ? "opacity-40 hover:opacity-90" : "pointer-events-none opacity-0"
+      className={`fixed inset-x-0 bottom-0 z-20 block px-6 py-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] transition-opacity duration-[1200ms] ${
+        visible ? "opacity-100" : "pointer-events-none opacity-0"
       }`}
     >
-      <nav className="mx-auto grid max-w-5xl grid-cols-2 gap-x-8 gap-y-3 text-[11px] uppercase tracking-[0.2em] text-bone sm:grid-cols-5">
-        <Item index="01" label="The Forge" sub="the courage to become" href={FORGE_LINKS.movement} />
-
-        {/* 02 BOOKS — clean local link to the catalog */}
-        <Item index="02" label="Books" sub="stillness & forge" href="/books" />
-
-        {/* 03 MERCH — the founder's drop, local /drop page */}
-        <Item index="03" label="Merch" sub="the founder's drop" href="/drop" />
-
-        <Item index="04" label="Events" sub="gatherings on the horizon" href="/events" />
-
-        <Link href="/privacy" className="hover:text-violet-glow flex flex-col gap-1">
-          <span className="text-bone/50">05</span>
-          <span className="text-bone">Privacy</span>
-          <span className="text-[10px] normal-case tracking-normal text-bone/40">data &amp; terms</span>
-        </Link>
+      <nav className="mx-auto flex max-w-md flex-col items-center gap-3 text-bone">
+        {/* primary row — content & commerce */}
+        <div className="flex items-center justify-center gap-7 text-[13px] font-light lowercase tracking-[0.18em]">
+          <Item label="books" href="/books" />
+          <Item label="merch" href="/drop" />
+          <Item label="events" href="/events" />
+        </div>
+        {/* quieter row — the deeper path & the fine print */}
+        <div className="flex items-center justify-center gap-7 text-[11px] font-light lowercase tracking-[0.18em] opacity-60">
+          <Item label="forge" href={FORGE_LINKS.movement} />
+          <Item label="privacy" href="/privacy" />
+        </div>
       </nav>
     </footer>
   );
 }
 
-function Item({ index, label, sub, href }: { index: string; label: string; sub: string; href: string; }) {
-  const content = (
-    <div className="flex flex-col gap-1">
-      <span className="text-bone/50">{index}</span>
-      <span className="text-bone">{label}</span>
-      <span className="text-[10px] normal-case tracking-normal text-bone/40">{sub}</span>
-    </div>
-  );
-  if (!href) return <div className="cursor-default">{content}</div>;
+function Item({ label, href }: { label: string; href: string }) {
+  const className = "text-bone/70 transition-colors hover:text-bone";
 
-  // Internal routing check so Next.js handles local links smoothly without a hard refresh
+  if (!href) return <span className="text-bone/40">{label}</span>;
+
+  // Internal routes use Next.js <Link> (no hard refresh); external links open in a new tab.
   if (href.startsWith("/")) {
     return (
-      <Link href={href} className="hover:text-violet-glow">
-        {content}
+      <Link href={href} className={className}>
+        {label}
       </Link>
     );
   }
 
   return (
-    <a href={href} target="_blank" rel="noreferrer" className="hover:text-violet-glow">
-      {content}
+    <a href={href} target="_blank" rel="noreferrer" className={className}>
+      {label}
     </a>
   );
 }
