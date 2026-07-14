@@ -29,7 +29,7 @@ export default function MovementFooter({ hidden }: { hidden: boolean }) {
           <Item label="events" href="/events" />
         </div>
         {/* quieter row — the deeper path & the fine print */}
-        <div className="flex items-center justify-center gap-7 text-[11px] font-light lowercase tracking-[0.18em] opacity-60">
+        <div className="flex items-center justify-center gap-7 text-[13px] font-light lowercase tracking-[0.18em]">
           <Item label="forge" href={FORGE_LINKS.movement} />
           <Item label="privacy" href="/privacy" />
         </div>
