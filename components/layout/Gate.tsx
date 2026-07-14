@@ -337,8 +337,8 @@ export default function Gate({ onEnter, onBegin }: { onEnter: () => void; onBegi
 
   return (
     <main
-      className={`relative flex min-h-screen flex-col items-center gap-10 overflow-hidden px-6 py-16 transition-opacity duration-[2000ms] ease-out sm:justify-center sm:gap-12 ${
-        isForm ? "justify-start pt-24 pb-44 sm:pt-16 sm:pb-16" : "justify-center"
+      className={`relative flex min-h-screen flex-col items-center justify-center gap-10 overflow-hidden px-6 py-16 ease-out [transition:opacity_2000ms_ease-out,padding_700ms_ease-out] sm:gap-12 ${
+        isForm ? "pb-28 sm:pb-16" : ""
       }`}
       style={{ opacity: mounted ? 1 : 0 }}
     >
@@ -351,9 +351,10 @@ export default function Gate({ onEnter, onBegin }: { onEnter: () => void; onBegi
         @media (prefers-reduced-motion: reduce) { .idle-orb { animation: none; } }
       `}</style>
 
-      {/* Title — in normal flow during the form so it never crowds the orb. */}
+      {/* Title — absolutely positioned above the orb so it floats there without
+          taking flow space; this keeps the ORB at true screen center. */}
       <h1
-        className="pointer-events-none px-2 text-center text-xl font-light tracking-tight text-bone transition-opacity duration-[2000ms] sm:text-2xl"
+        className="pointer-events-none absolute left-1/2 top-[24%] w-full -translate-x-1/2 px-6 text-center text-xl font-light tracking-tight text-bone transition-opacity duration-[2000ms] sm:top-[26%] sm:text-2xl"
         style={{ opacity: isForm ? 1 : 0 }}
       >
         are you ready to stop the world?
